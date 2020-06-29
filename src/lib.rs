@@ -1,4 +1,7 @@
 //! Issue commands to an HAProxy over a stats socket.
+
+#![feature(result_flattening)]
+
 use std::io::{self, BufRead, BufReader, Read, Write};
 use std::os::unix::net::UnixStream;
 use std::path::PathBuf;
@@ -6,6 +9,7 @@ use std::str::FromStr;
 
 mod commands;
 pub mod errors;
+mod parsers;
 pub mod responses;
 
 use errors::Error;
@@ -32,7 +36,7 @@ impl UnixSocketBuilder {
     /// # Examples
     /// ```no_run
     /// use haptik::{ConnectionBuilder, UnixSocketBuilder};
-    /// 
+    ///
     /// let socket_builder = UnixSocketBuilder::new("/var/run/haproxy.sock".into());
     /// let connection = socket_builder.connect().expect("Failed to connect");
     /// ```
@@ -74,12 +78,12 @@ pub struct Connection<T> {
 
 impl<T: Read + Write> Connection<T> {
     /// Query HAProxy to determine the current level.
-    /// 
+    ///
     /// # Examples
     /// ```no_run
     /// use haptik::{ConnectionBuilder, UnixSocketBuilder};
     /// use haptik::responses::Level;
-    /// 
+    ///
     /// let socket_builder = UnixSocketBuilder::default();
     /// let connection = socket_builder.connect().expect("Failed to connect");
     /// assert_eq!(connection.level().expect("Failed to query level"), Level::Admin);
@@ -90,8 +94,27 @@ impl<T: Read + Write> Connection<T> {
 
         let mut buf = String::new();
         self.reader.read_line(&mut buf)?;
+        buf.pop(); // Remove trailing '\n'
 
         responses::Level::from_str(buf.as_str())
+    }
+
+    /// Query HAProxy for the list of configured CLI sockets.
+    ///
+    /// # Examples
+    /// ```no_run
+    /// use haptik::{ConnectionBuilder, UnixSocketBuilder};
+    /// use haptik::responses::Level;
+    ///
+    /// let socket_builder = UnixSocketBuilder::default();
+    /// let connection = socket_builder.connect().expect("Failed to connect");
+    /// println!("{:?}", connection.cli_sockets().expect("Failed to query CLI sockets"));
+    /// ```
+    pub fn cli_sockets(mut self) -> Result<Vec<responses::CliSocket>, Error> {
+        commands::show_cli_sockets(&mut self.socket)?;
+        commands::end(&mut self.socket)?;
+
+        parsers::parse_cli_sockets(&mut self.reader)
     }
 }
 
