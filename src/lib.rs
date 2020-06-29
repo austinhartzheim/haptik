@@ -1,7 +1,5 @@
 //! Issue commands to an HAProxy over a stats socket.
 
-#![feature(result_flattening)]
-
 use std::io::{self, BufRead, BufReader, Read, Write};
 use std::os::unix::net::UnixStream;
 use std::path::PathBuf;
