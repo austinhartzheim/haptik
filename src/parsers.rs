@@ -17,7 +17,7 @@ pub fn parse_cli_sockets<T: Read>(reader: &mut BufReader<T>) -> Result<Vec<CliSo
         // Convert io::Error to Error. In the Ok case, pass the line to CliSocket::from_str.
         .map(|line_res| {
             line_res
-                .map_err(|err| Error::from(err))
+                .map_err(Error::from)
                 .and_then(|line| CliSocket::from_str(line.as_str()))
         })
         .collect()
@@ -74,12 +74,12 @@ mod tests {
 
     #[test]
     fn parse_errors_valid_input() {
-        let mut buffer = BufReader::new(&b"Total events captured on [01/Jan/2020:03:15:05.071] : 0\n"[..]);
+        let mut buffer =
+            BufReader::new(&b"Total events captured on [01/Jan/2020:03:15:05.071] : 0\n"[..]);
         assert_eq!(parse_errors(&mut buffer).unwrap(), 0);
 
-        let mut buffer = BufReader::new(&b"Total events captured on [01/Jan/2020:03:15:05.071] : 100\n"[..]);
+        let mut buffer =
+            BufReader::new(&b"Total events captured on [01/Jan/2020:03:15:05.071] : 100\n"[..]);
         assert_eq!(parse_errors(&mut buffer).unwrap(), 100);
-
-
     }
 }
