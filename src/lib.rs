@@ -116,6 +116,24 @@ impl<T: Read + Write> Connection<T> {
 
         parsers::parse_cli_sockets(&mut self.reader)
     }
+
+    /// Query HAProxy for the error count.
+    ///
+    /// # Examples
+    /// ```no_run
+    /// use haptik::{ConnectionBuilder, UnixSocketBuilder};
+    /// use haptik::responses::Level;
+    ///
+    /// let socket_builder = UnixSocketBuilder::default();
+    /// let connection = socket_builder.connect().expect("Failed to connect");
+    /// assert_eq!(connection.errors().expect("Failed to query error count"), 0);
+    /// ```
+    pub fn errors(mut self) -> Result<u32, Error> {
+        commands::show_errors(&mut self.socket)?;
+        commands::end(&mut self.socket)?;
+
+        parsers::parse_errors(&mut self.reader)
+    }
 }
 
 #[cfg(test)]

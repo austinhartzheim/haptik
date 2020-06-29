@@ -1,12 +1,10 @@
-use std::io::{BufRead, BufReader, Read, Write};
+use std::io::{BufRead, BufReader, Read};
 use std::str::FromStr;
 
 use crate::errors::Error;
 use crate::responses::CliSocket;
 
-pub fn parse_cli_sockets<T: Read + Write>(
-    reader: &mut BufReader<T>,
-) -> Result<Vec<CliSocket>, Error> {
+pub fn parse_cli_sockets<T: Read>(reader: &mut BufReader<T>) -> Result<Vec<CliSocket>, Error> {
     reader
         .lines()
         // Filter out lines starting with '#', preserving any errors.
@@ -25,8 +23,20 @@ pub fn parse_cli_sockets<T: Read + Write>(
         .collect()
 }
 
+pub fn parse_errors<T: Read>(reader: &mut BufReader<T>) -> Result<u32, Error> {
+    let mut buf = String::with_capacity(65);
+    reader.read_line(&mut buf)?;
+    buf.pop(); // Remove trailing '\n'
+
+    buf.rsplitn(2, ' ')
+        .next()
+        .ok_or(Error::ParseFailure)
+        .and_then(|count| u32::from_str(count).map_err(|_| Error::ParseFailure))
+}
+
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::{responses, ConnectionBuilder, UnixSocketBuilder};
 
     #[test]
@@ -60,5 +70,16 @@ mod tests {
                 processes: responses::CliSocketProcesses::All
             }
         );
+    }
+
+    #[test]
+    fn parse_errors_valid_input() {
+        let mut buffer = BufReader::new(&b"Total events captured on [01/Jan/2020:03:15:05.071] : 0\n"[..]);
+        assert_eq!(parse_errors(&mut buffer).unwrap(), 0);
+
+        let mut buffer = BufReader::new(&b"Total events captured on [01/Jan/2020:03:15:05.071] : 100\n"[..]);
+        assert_eq!(parse_errors(&mut buffer).unwrap(), 100);
+
+
     }
 }
