@@ -8,9 +8,11 @@ use std::str::FromStr;
 mod commands;
 pub mod errors;
 mod parsers;
+pub mod requests;
 pub mod responses;
 
 use errors::Error;
+use requests::{BackendId, ErrorFlag};
 
 /// Support connections to HAProxy via Unix sockets and TCP sockets using the same interface.
 pub trait ConnectionBuilder {
@@ -23,6 +25,7 @@ pub trait ConnectionBuilder {
 /// Configuration for connecting to an HAProxy Unix Socket.
 ///
 /// This allows configuration of the path for the Unix socket.
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct UnixSocketBuilder {
     /// The path of the Unix socket.
     path: PathBuf,
@@ -115,7 +118,9 @@ impl<T: Read + Write> Connection<T> {
         parsers::parse_cli_sockets(&mut self.reader)
     }
 
-    /// Query HAProxy for the error count.
+    /// Query HAProxy for the error count of all backends and all error types.
+    ///
+    /// This command is identical to `errors_backend(BackendId::All, ErrorFlag::All)`.
     ///
     /// # Examples
     /// ```no_run
@@ -128,6 +133,36 @@ impl<T: Read + Write> Connection<T> {
     /// ```
     pub fn errors(mut self) -> Result<u32, Error> {
         commands::show_errors(&mut self.socket)?;
+        commands::end(&mut self.socket)?;
+
+        parsers::parse_errors(&mut self.reader)
+    }
+
+    /// Query HAProxy for the error count of a specific backend and a specific error type.
+    ///
+    /// Passing `BackendId::All` queries errors for all backends; this is the same as passing `-1`
+    /// as the ID, which HAProxy interprets as all.
+    ///
+    /// # Examples
+    /// ```no_run
+    /// use haptik::{ConnectionBuilder, UnixSocketBuilder};
+    /// use haptik::requests::{BackendId, ErrorFlag};
+    /// use haptik::responses::Level;
+    ///
+    /// let socket_builder = UnixSocketBuilder::default();
+    /// let connection = socket_builder.connect().expect("Failed to connect");
+    /// assert_eq!(
+    ///     connection.errors_backend(BackendId::Id(1), ErrorFlag::All)
+    ///         .expect("Failed to query error count"),
+    ///     0
+    /// );
+    /// ```
+    pub fn errors_backend(
+        mut self,
+        backend: BackendId,
+        error_type: ErrorFlag,
+    ) -> Result<u32, Error> {
+        commands::show_errors_backend(&mut self.socket, backend, error_type)?;
         commands::end(&mut self.socket)?;
 
         parsers::parse_errors(&mut self.reader)
@@ -164,5 +199,36 @@ mod tests {
         let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock".into());
         let connection = builder.connect().unwrap();
         assert_eq!(connection.level().unwrap(), responses::Level::Admin);
+    }
+
+    #[test]
+    fn connection_errors() {
+        let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock".into());
+        let connection = builder.connect().unwrap();
+        assert_eq!(connection.errors().unwrap(), 0);
+    }
+
+    #[test]
+    fn connection_errors_backend_all() {
+        let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock".into());
+        let connection = builder.connect().unwrap();
+        assert_eq!(
+            connection
+                .errors_backend(BackendId::All, ErrorFlag::All)
+                .unwrap(),
+            0
+        );
+    }
+
+    #[test]
+    fn connection_errors_backend_id() {
+        let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock".into());
+        let connection = builder.connect().unwrap();
+        assert_eq!(
+            connection
+                .errors_backend(BackendId::Id(1), ErrorFlag::Request)
+                .unwrap(),
+            0
+        );
     }
 }
