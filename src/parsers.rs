@@ -62,7 +62,7 @@ mod tests {
         assert_eq!(
             sockets[0],
             responses::CliSocket {
-                socket: responses::CliSocketAddr::Unix("/var/run/haproxy.sock".into()),
+                address: responses::CliSocketAddr::Unix("/var/run/haproxy.sock".into()),
                 level: responses::Level::Admin,
                 processes: responses::CliSocketProcesses::All
             }
@@ -70,7 +70,7 @@ mod tests {
         assert_eq!(
             sockets[1],
             responses::CliSocket {
-                socket: responses::CliSocketAddr::Ip("127.0.0.1:9999".parse().unwrap()),
+                address: responses::CliSocketAddr::Ip("127.0.0.1:9999".parse().unwrap()),
                 level: responses::Level::Admin,
                 processes: responses::CliSocketProcesses::All
             }
@@ -78,7 +78,7 @@ mod tests {
         assert_eq!(
             sockets[2],
             responses::CliSocket {
-                socket: responses::CliSocketAddr::Ip("[::]:9999".parse().unwrap()),
+                address: responses::CliSocketAddr::Ip("[::]:9999".parse().unwrap()),
                 level: responses::Level::Admin,
                 processes: responses::CliSocketProcesses::All
             }

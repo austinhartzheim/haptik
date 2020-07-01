@@ -67,6 +67,12 @@ impl ConnectionBuilder for UnixSocketBuilder {
     }
 }
 
+impl From<PathBuf> for UnixSocketBuilder {
+    fn from(path: PathBuf) -> Self {
+        Self { path }
+    }
+}
+
 /// A connection to HAProxy via any of the supported transports.
 ///
 /// By convention, connections are closed after each command. Therefore, many of the methods on

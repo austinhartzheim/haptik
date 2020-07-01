@@ -62,7 +62,7 @@ impl FromStr for Level {
 
 #[derive(Debug, Hash, Eq, PartialEq)]
 pub struct CliSocket {
-    pub socket: CliSocketAddr,
+    pub address: CliSocketAddr,
     pub level: Level,
     pub processes: CliSocketProcesses,
 }
@@ -74,7 +74,7 @@ impl FromStr for CliSocket {
         let parts: Vec<&str> = s.splitn(3, ' ').collect();
         match parts.as_slice() {
             [socket_addr, level, processes] => Ok(CliSocket {
-                socket: CliSocketAddr::from_str(socket_addr)?,
+                address: CliSocketAddr::from_str(socket_addr)?,
                 level: Level::from_str(level)?,
                 processes: CliSocketProcesses::from_str(processes)?,
             }),
@@ -173,7 +173,7 @@ mod tests {
         assert_eq!(
             CliSocket::from_str("unix@/var/run/haproxy.sock admin all").unwrap(),
             CliSocket {
-                socket: CliSocketAddr::Unix("/var/run/haproxy.sock".into()),
+                address: CliSocketAddr::Unix("/var/run/haproxy.sock".into()),
                 level: Level::Admin,
                 processes: CliSocketProcesses::All,
             }
