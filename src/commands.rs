@@ -7,6 +7,10 @@ pub fn end<W: Write>(w: &mut W) -> Result<()> {
     w.write_all(b"\n")
 }
 
+pub fn show_acl<W: Write>(w: &mut W) -> Result<()> {
+    w.write_all(b"show acl")
+}
+
 pub fn show_cli_level<W: Write>(w: &mut W) -> Result<()> {
     w.write_all(b"show cli level")
 }

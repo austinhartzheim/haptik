@@ -14,3 +14,9 @@ impl From<std::io::Error> for Error {
         Error::IoError(err)
     }
 }
+
+impl From<std::num::ParseIntError> for Error {
+    fn from(_err: std::num::ParseIntError) -> Self {
+        Error::ParseFailure
+    }
+}

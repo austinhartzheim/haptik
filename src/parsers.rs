@@ -1,19 +1,21 @@
-use std::io::{BufRead, BufReader, Read};
+use std::io::{self, BufRead, BufReader, Read};
 use std::str::FromStr;
 
 use crate::errors::Error;
-use crate::responses::CliSocket;
+use crate::responses::{Acl, CliSocket};
+
+pub fn parse_acl_list<T: Read>(reader: &mut BufReader<T>) -> Result<Vec<Acl>, Error> {
+    skip_comment_or_empty_lines(reader.lines())
+        .map(|line_res| {
+            line_res
+                .map_err(Error::from)
+                .and_then(|line| Acl::from_str(line.as_str()))
+        })
+        .collect()
+}
 
 pub fn parse_cli_sockets<T: Read>(reader: &mut BufReader<T>) -> Result<Vec<CliSocket>, Error> {
-    reader
-        .lines()
-        // Filter out lines starting with '#', preserving any errors.
-        .filter(|line_res| {
-            !line_res
-                .as_ref()
-                .map(|line| line == "" || line.starts_with('#'))
-                .unwrap_or(true)
-        })
+    skip_comment_or_empty_lines(reader.lines())
         // Convert io::Error to Error. In the Ok case, pass the line to CliSocket::from_str.
         .map(|line_res| {
             line_res
@@ -32,6 +34,17 @@ pub fn parse_errors<T: Read>(reader: &mut BufReader<T>) -> Result<u32, Error> {
         .next()
         .ok_or(Error::ParseFailure)
         .and_then(|count| u32::from_str(count).map_err(|_| Error::ParseFailure))
+}
+
+/// Skip lines starting with '#' and any line that is empty.
+fn skip_comment_or_empty_lines<B: io::BufRead>(lines: io::Lines<B>) -> impl Iterator<Item=Result<String, io::Error>> {
+    lines
+        .filter(|line_res| {
+            !line_res
+                .as_ref()
+                .map(|line| line == "" || line.starts_with('#'))
+                .unwrap_or(true)
+        })
 }
 
 #[cfg(test)]
@@ -70,6 +83,12 @@ mod tests {
                 processes: responses::CliSocketProcesses::All
             }
         );
+    }
+
+    #[test]
+    fn parse_acl_list_valid_input() {
+        let mut buffer = BufReader::new(&b"# id (file) description\n0 () acl 'src' file '/usr/local/etc/haproxy/haproxy.cfg' line 20"[..]);
+        assert_eq!(parse_acl_list(&mut buffer).unwrap().len(), 1);
     }
 
     #[test]

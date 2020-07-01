@@ -13,6 +13,7 @@ pub mod responses;
 
 use errors::Error;
 use requests::{BackendId, ErrorFlag};
+use responses::Acl;
 
 /// Support connections to HAProxy via Unix sockets and TCP sockets using the same interface.
 pub trait ConnectionBuilder {
@@ -78,6 +79,13 @@ pub struct Connection<T> {
 }
 
 impl<T: Read + Write> Connection<T> {
+    pub fn acl_list(mut self) -> Result<Vec<Acl>, Error> {
+        commands::show_acl(&mut self.socket)?;
+        commands::end(&mut self.socket)?;
+
+        parsers::parse_acl_list(&mut self.reader)
+    }
+
     /// Query HAProxy to determine the current level.
     ///
     /// # Examples
@@ -192,6 +200,17 @@ mod tests {
                 .kind(),
             io::ErrorKind::NotFound
         );
+    }
+
+    #[test]
+    fn connection_acl_list() {
+        let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock".into());
+        let connection = builder.connect().unwrap();
+        let acls = connection.acl_list().unwrap();
+        assert_eq!(acls.len(), 1);
+        assert_eq!(acls[0].id, 0);
+        assert_eq!(acls[0].reference, None);
+        assert_eq!(acls[0].description, "acl 'src' file '/usr/local/etc/haproxy/haproxy.cfg' line 20");
     }
 
     #[test]

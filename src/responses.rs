@@ -4,6 +4,42 @@ use crate::errors::Error;
 use std::path::PathBuf;
 use std::str::FromStr;
 
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Acl {
+    pub id: i32,
+    pub reference: Option<String>,
+    pub description: String,
+}
+
+impl FromStr for Acl {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let parts: Vec<&str> = s.splitn(3, ' ').collect();
+        match parts.as_slice() {
+            [id, reference, description] => {
+                let reference_option = match reference {
+                    &"()" => None,
+                    reference => {
+                        if reference.len() < 3 {
+                            return Err(Error::ParseFailure);
+                        }
+
+                        Some(reference[1..reference.len()-1].into())
+                    }
+                };
+
+                Ok(Acl {
+                    id: i32::from_str(id)?,
+                    reference: reference_option,
+                    description: description.to_string(),
+                })
+            }
+            _ => Err(Error::ParseFailure)
+        }
+    }
+}
+
 #[derive(Debug, Hash, Eq, PartialEq)]
 pub enum Level {
     Admin,
@@ -109,6 +145,20 @@ impl FromStr for CliSocketProcesses {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn acl_from_bytes() {
+        assert_eq!(
+            Acl::from_str("0 () acl 'src' file '/usr/local/etc/haproxy/haproxy.cfg' line 20").unwrap(),
+            Acl { id: 0, reference: None, description: "acl 'src' file '/usr/local/etc/haproxy/haproxy.cfg' line 20".into() }
+        );
+        assert_eq!(
+            Acl::from_str("1 (test) acl 'src' file '/usr/local/etc/haproxy/haproxy.cfg' line 20").unwrap(),
+            Acl { id: 1, reference: Some("test".into()), description: "acl 'src' file '/usr/local/etc/haproxy/haproxy.cfg' line 20".into() }
+        );
+        Acl::from_str("1 ( acl 'src' file '/usr/local/etc/haproxy/haproxy.cfg' line 20").expect_err("Parsed an invalid ACL without error");
+        Acl::from_str("1 ()").expect_err("Parsed an invalid ACL without error");
+    }
 
     #[test]
     fn level_from_bytes() {
