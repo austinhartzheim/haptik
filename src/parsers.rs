@@ -37,14 +37,15 @@ pub fn parse_errors<T: Read>(reader: &mut BufReader<T>) -> Result<u32, Error> {
 }
 
 /// Skip lines starting with '#' and any line that is empty.
-fn skip_comment_or_empty_lines<B: io::BufRead>(lines: io::Lines<B>) -> impl Iterator<Item=Result<String, io::Error>> {
-    lines
-        .filter(|line_res| {
-            !line_res
-                .as_ref()
-                .map(|line| line == "" || line.starts_with('#'))
-                .unwrap_or(true)
-        })
+fn skip_comment_or_empty_lines<B: io::BufRead>(
+    lines: io::Lines<B>,
+) -> impl Iterator<Item = Result<String, io::Error>> {
+    lines.filter(|line_res| {
+        !line_res
+            .as_ref()
+            .map(|line| line == "" || line.starts_with('#'))
+            .unwrap_or(true)
+    })
 }
 
 #[cfg(test)]

@@ -25,7 +25,7 @@ impl FromStr for Acl {
                             return Err(Error::ParseFailure);
                         }
 
-                        Some(reference[1..reference.len()-1].into())
+                        Some(reference[1..reference.len() - 1].into())
                     }
                 };
 
@@ -35,7 +35,7 @@ impl FromStr for Acl {
                     description: description.to_string(),
                 })
             }
-            _ => Err(Error::ParseFailure)
+            _ => Err(Error::ParseFailure),
         }
     }
 }
@@ -149,14 +149,25 @@ mod tests {
     #[test]
     fn acl_from_bytes() {
         assert_eq!(
-            Acl::from_str("0 () acl 'src' file '/usr/local/etc/haproxy/haproxy.cfg' line 20").unwrap(),
-            Acl { id: 0, reference: None, description: "acl 'src' file '/usr/local/etc/haproxy/haproxy.cfg' line 20".into() }
+            Acl::from_str("0 () acl 'src' file '/usr/local/etc/haproxy/haproxy.cfg' line 20")
+                .unwrap(),
+            Acl {
+                id: 0,
+                reference: None,
+                description: "acl 'src' file '/usr/local/etc/haproxy/haproxy.cfg' line 20".into()
+            }
         );
         assert_eq!(
-            Acl::from_str("1 (test) acl 'src' file '/usr/local/etc/haproxy/haproxy.cfg' line 20").unwrap(),
-            Acl { id: 1, reference: Some("test".into()), description: "acl 'src' file '/usr/local/etc/haproxy/haproxy.cfg' line 20".into() }
+            Acl::from_str("1 (test) acl 'src' file '/usr/local/etc/haproxy/haproxy.cfg' line 20")
+                .unwrap(),
+            Acl {
+                id: 1,
+                reference: Some("test".into()),
+                description: "acl 'src' file '/usr/local/etc/haproxy/haproxy.cfg' line 20".into()
+            }
         );
-        Acl::from_str("1 ( acl 'src' file '/usr/local/etc/haproxy/haproxy.cfg' line 20").expect_err("Parsed an invalid ACL without error");
+        Acl::from_str("1 ( acl 'src' file '/usr/local/etc/haproxy/haproxy.cfg' line 20")
+            .expect_err("Parsed an invalid ACL without error");
         Acl::from_str("1 ()").expect_err("Parsed an invalid ACL without error");
     }
 

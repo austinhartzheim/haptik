@@ -216,7 +216,10 @@ mod tests {
         assert_eq!(acls.len(), 1);
         assert_eq!(acls[0].id, 0);
         assert_eq!(acls[0].reference, None);
-        assert_eq!(acls[0].description, "acl 'src' file '/usr/local/etc/haproxy/haproxy.cfg' line 20");
+        assert_eq!(
+            acls[0].description,
+            "acl 'src' file '/usr/local/etc/haproxy/haproxy.cfg' line 20"
+        );
     }
 
     #[test]
