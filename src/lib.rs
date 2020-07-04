@@ -188,6 +188,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[ignore]
     fn unix_socket_builder_connects() {
         let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock".into());
         assert!(
@@ -209,6 +210,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn connection_acl_list() {
         let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock".into());
         let connection = builder.connect().unwrap();
@@ -223,6 +225,41 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
+    fn connection_cli_sockets() {
+        let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock".into());
+        let connection = builder.connect().unwrap();
+        let sockets = connection.cli_sockets().unwrap();
+
+        assert_eq!(sockets.len(), 3);
+        assert_eq!(
+            sockets[0],
+            responses::CliSocket {
+                address: responses::CliSocketAddr::Unix("/var/run/haproxy.sock".into()),
+                level: responses::Level::Admin,
+                processes: responses::CliSocketProcesses::All
+            }
+        );
+        assert_eq!(
+            sockets[1],
+            responses::CliSocket {
+                address: responses::CliSocketAddr::Ip("127.0.0.1:9999".parse().unwrap()),
+                level: responses::Level::Admin,
+                processes: responses::CliSocketProcesses::All
+            }
+        );
+        assert_eq!(
+            sockets[2],
+            responses::CliSocket {
+                address: responses::CliSocketAddr::Ip("[::]:9999".parse().unwrap()),
+                level: responses::Level::Admin,
+                processes: responses::CliSocketProcesses::All
+            }
+        );
+    }
+
+    #[test]
+    #[ignore]
     fn connection_level() {
         let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock".into());
         let connection = builder.connect().unwrap();
@@ -230,6 +267,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn connection_errors() {
         let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock".into());
         let connection = builder.connect().unwrap();
@@ -237,6 +275,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn connection_errors_backend_all() {
         let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock".into());
         let connection = builder.connect().unwrap();
@@ -249,6 +288,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn connection_errors_backend_id() {
         let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock".into());
         let connection = builder.connect().unwrap();
