@@ -51,11 +51,38 @@ fn skip_comment_or_empty_lines<B: io::BufRead>(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::responses;
 
     #[test]
     fn parse_acl_list_valid_input() {
         let mut buffer = BufReader::new(&b"# id (file) description\n0 () acl 'src' file '/usr/local/etc/haproxy/haproxy.cfg' line 20"[..]);
         assert_eq!(parse_acl_list(&mut buffer).unwrap().len(), 1);
+    }
+
+    #[test]
+    fn parse_cli_sockets_valid_input() {
+        let mut buffer = BufReader::new(
+            &b"unix@/var/run/haproxy.sock admin all\nipv4@127.0.0.1:9999 user all\n\n"[..],
+        );
+        let sockets = parse_cli_sockets(&mut buffer).expect("Failed to parse valid input");
+
+        assert_eq!(sockets.len(), 2);
+        assert_eq!(
+            sockets[0],
+            CliSocket {
+                address: responses::CliSocketAddr::Unix("/var/run/haproxy.sock".into()),
+                level: responses::Level::Admin,
+                processes: responses::CliSocketProcesses::All
+            }
+        );
+        assert_eq!(
+            sockets[1],
+            CliSocket {
+                address: responses::CliSocketAddr::Ip("127.0.0.1:9999".parse().unwrap()),
+                level: responses::Level::User,
+                processes: responses::CliSocketProcesses::All
+            }
+        );
     }
 
     #[test]
