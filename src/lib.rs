@@ -9,12 +9,13 @@ use std::str::FromStr;
 
 mod commands;
 pub mod errors;
+pub mod models;
 mod parsers;
 pub mod requests;
 pub mod responses;
 
 use errors::Error;
-use requests::{BackendId, ErrorFlag};
+use requests::{AclId, BackendId, ErrorFlag};
 use responses::Acl;
 
 /// Support connections to HAProxy via Unix sockets and TCP sockets using the same interface.
@@ -87,6 +88,34 @@ pub struct Connection<T> {
 }
 
 impl<T: Read + Write> Connection<T> {
+    /// Query HAProxy for the contents of an ACL.
+    ///
+    /// ACLs in HAProxy support multiple types of data (strings, IP addresses, etc.); but the type
+    /// data is not immediately available when querying the ACL. If you know the underlying type,
+    /// you can instruct `haptik` to parse the ACL entries into that type so long as it implements
+    /// `FromStr`. Provide the type as the type parameter to this method. If the type is unknown,
+    /// you can use `String`.
+    ///
+    /// # Examples
+    /// ```no_run
+    /// use std::net::IpAddr;
+    /// use haptik::{ConnectionBuilder, UnixSocketBuilder};
+    /// use haptik::requests::AclId;
+    ///
+    /// let socket_builder = UnixSocketBuilder::default();
+    /// let connection = socket_builder.connect().expect("Failed to connect");
+    /// let acl_data = connection.acl_data::<IpAddr>(AclId::Id(0)).expect("Failed to query ACL");
+    /// for acl_entry in acl_data.iter() {
+    ///     println!("ACL Entry: id={}, value={}", acl_entry.id, acl_entry.value);
+    /// }
+    /// ```
+    pub fn acl_data<E: FromStr>(mut self, id: AclId) -> Result<Vec<models::AclEntry<E>>, Error> {
+        commands::show_acl_entries(&mut self.socket, id)?;
+        commands::end(&mut self.socket)?;
+
+        parsers::parse_acl_entries(&mut self.reader)
+    }
+
     pub fn acl_list(mut self) -> Result<Vec<Acl>, Error> {
         commands::show_acl(&mut self.socket)?;
         commands::end(&mut self.socket)?;
@@ -209,6 +238,36 @@ mod tests {
                 .kind(),
             io::ErrorKind::NotFound
         );
+    }
+
+    #[test]
+    #[ignore]
+    fn connection_acl_data() {
+        let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock".into());
+        let connection = builder.connect().unwrap();
+        let acl_data = connection
+            .acl_data::<std::net::IpAddr>(AclId::Id(0))
+            .unwrap();
+        assert_eq!(acl_data.len(), 2);
+        assert_eq!(
+            acl_data[0].value,
+            std::net::IpAddr::V4("127.0.0.1".parse().unwrap())
+        );
+        assert_eq!(
+            acl_data[1].value,
+            std::net::IpAddr::V4("127.0.0.2".parse().unwrap())
+        );
+    }
+
+    #[test]
+    #[ignore]
+    fn connection_acl_data_str() {
+        let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock".into());
+        let connection = builder.connect().unwrap();
+        let acl_data = connection.acl_data::<String>(AclId::Id(0)).unwrap();
+        assert_eq!(acl_data.len(), 2);
+        assert_eq!(acl_data[0].value, "127.0.0.1",);
+        assert_eq!(acl_data[1].value, "127.0.0.2",);
     }
 
     #[test]

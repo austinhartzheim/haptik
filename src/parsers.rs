@@ -2,6 +2,7 @@ use std::io::{self, BufRead, BufReader, Read};
 use std::str::FromStr;
 
 use crate::errors::Error;
+use crate::models;
 use crate::responses::{Acl, CliSocket};
 
 pub fn parse_acl_list<T: Read>(reader: &mut BufReader<T>) -> Result<Vec<Acl>, Error> {
@@ -10,6 +11,26 @@ pub fn parse_acl_list<T: Read>(reader: &mut BufReader<T>) -> Result<Vec<Acl>, Er
             line_res
                 .map_err(Error::from)
                 .and_then(|line| Acl::from_str(line.as_str()))
+        })
+        .collect()
+}
+
+pub fn parse_acl_entries<T: Read, E: FromStr>(
+    reader: &mut BufReader<T>,
+) -> Result<Vec<models::AclEntry<E>>, Error> {
+    let mut lines = skip_comment_or_empty_lines(reader.lines()).peekable();
+
+    if let Some(Ok(line)) = lines.peek() {
+        if line.starts_with("Unknown ACL identifier") {
+            return Err(Error::UnknownId);
+        }
+    }
+
+    lines
+        .map(|line_res| {
+            line_res
+                .map_err(Error::from)
+                .and_then(|line| models::AclEntry::from_str(line.as_str()))
         })
         .collect()
 }
@@ -57,6 +78,25 @@ mod tests {
     fn parse_acl_list_valid_input() {
         let mut buffer = BufReader::new(&b"# id (file) description\n0 () acl 'src' file '/usr/local/etc/haproxy/haproxy.cfg' line 20"[..]);
         assert_eq!(parse_acl_list(&mut buffer).unwrap().len(), 1);
+    }
+
+    #[test]
+    fn parse_acl_entries_valid_input() {
+        let mut buffer =
+            BufReader::new(&b"0x55fd35e0e190 127.0.0.1\n0x55fd35e0e220 127.0.0.2\n\n"[..]);
+        assert_eq!(
+            parse_acl_entries::<_, std::net::IpAddr>(&mut buffer).unwrap(),
+            vec![
+                models::AclEntry {
+                    id: 0x55fd35e0e190,
+                    value: "127.0.0.1".parse().unwrap()
+                },
+                models::AclEntry {
+                    id: 0x55fd35e0e220,
+                    value: "127.0.0.2".parse().unwrap()
+                }
+            ]
+        );
     }
 
     #[test]

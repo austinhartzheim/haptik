@@ -1,6 +1,6 @@
 //! Format commands.
 
-use crate::requests::{BackendId, ErrorFlag};
+use crate::requests::{AclId, BackendId, ErrorFlag};
 use std::io::{Result, Write};
 
 pub fn end<W: Write>(w: &mut W) -> Result<()> {
@@ -9,6 +9,10 @@ pub fn end<W: Write>(w: &mut W) -> Result<()> {
 
 pub fn show_acl<W: Write>(w: &mut W) -> Result<()> {
     w.write_all(b"show acl")
+}
+
+pub fn show_acl_entries<W: Write>(w: &mut W, id: AclId) -> Result<()> {
+    w.write_fmt(format_args!("show acl {}", id))
 }
 
 pub fn show_cli_level<W: Write>(w: &mut W) -> Result<()> {

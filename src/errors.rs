@@ -5,6 +5,9 @@ pub enum Error {
     /// Failure parsing response from HAProxy.
     ParseFailure,
 
+    /// HAProxy was not able to find an item by the ID provided.
+    UnknownId,
+
     /// Error encountered while performing IO.
     IoError(std::io::Error),
 }
