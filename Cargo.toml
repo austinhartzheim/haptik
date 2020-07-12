@@ -3,6 +3,12 @@ name = "haptik"
 version = "0.1.0"
 authors = ["Austin Hartzheim <inbox@austinhartzheim.me>"]
 edition = "2018"
+keywords = [
+    "haproxy",
+    "proxy",
+    "client",
+    "socket",
+]
 
 [dependencies]
 
