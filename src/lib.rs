@@ -92,6 +92,17 @@ impl<T: Read + Write> Connection<T> {
     ///
     /// HAProxy's `add acl` command does not support entries with spaces, so this command truncates
     /// the value at the first space.
+    ///
+    /// # Examples
+    /// ```no_run
+    /// use std::net::Ipv4Addr;
+    /// use haptik::{ConnectionBuilder, UnixSocketBuilder};
+    /// use haptik::requests::AclId;
+    ///
+    /// let socket_builder = UnixSocketBuilder::default();
+    /// let connection = socket_builder.connect().expect("Failed to connect");
+    /// connection.acl_add(AclId::Id(0), Ipv4Addr::new(127, 0, 0, 1));
+    /// ```
     pub fn acl_add<E: ToString>(mut self, id: AclId, value: E) -> Result<(), Error> {
         let string = value.to_string();
         let parts: Vec<&str> = string.splitn(2, ' ').collect();
