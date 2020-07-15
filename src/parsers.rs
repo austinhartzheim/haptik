@@ -96,6 +96,20 @@ mod tests {
     }
 
     #[test]
+    fn parse_acl_add_error_responses() {
+        let mut buffer =
+            BufReader::new(&b"'add acl' expects two parameters: ACL identifier and pattern.\n"[..]);
+        assert!(parse_acl_add(&mut buffer).is_err());
+
+        let mut buffer =
+            BufReader::new(&b"Unknown ACL identifier. Please use #<id> or <file>.\n"[..]);
+        assert!(parse_acl_add(&mut buffer).is_err());
+
+        let mut buffer = BufReader::new(&b"'abcd' is not a valid IPv4 or IPv6 address.\n"[..]);
+        assert!(parse_acl_add(&mut buffer).is_err());
+    }
+
+    #[test]
     fn parse_acl_list_valid_input() {
         let mut buffer = BufReader::new(&b"# id (file) description\n0 () acl 'src' file '/usr/local/etc/haproxy/haproxy.cfg' line 20"[..]);
         assert_eq!(parse_acl_list(&mut buffer).unwrap().len(), 1);
