@@ -88,6 +88,20 @@ pub struct Connection<T> {
 }
 
 impl<T: Read + Write> Connection<T> {
+    /// Add an entry to an HAProxy ACL.
+    ///
+    /// HAProxy's `add acl` command does not support entries with spaces, so this command truncates
+    /// the value at the first space.
+    pub fn acl_add<E: ToString>(mut self, id: AclId, value: E) -> Result<(), Error> {
+        let string = value.to_string();
+        let parts: Vec<&str> = string.splitn(2, ' ').collect();
+
+        commands::add_acl(&mut self.socket, id, parts[0])?;
+        commands::end(&mut self.socket)?;
+
+        parsers::parse_acl_add(&mut self.reader)
+    }
+
     /// Query HAProxy for the contents of an ACL.
     ///
     /// ACLs in HAProxy support multiple types of data (strings, IP addresses, etc.); but the type
@@ -242,6 +256,22 @@ mod tests {
 
     #[test]
     #[ignore]
+    fn connection_acl_add() {
+        let ip = std::net::Ipv4Addr::new(255, 255, 255, 255);
+        let acl_id = AclId::Id(1);
+
+        let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock".into());
+        let connection = builder.connect().unwrap();
+        connection.acl_add(acl_id, &ip).unwrap();
+
+        // Check that the ACL contains the new entry
+        let connection = builder.connect().unwrap();
+        let acl_data = connection.acl_data::<std::net::Ipv4Addr>(acl_id).unwrap();
+        assert!(acl_data.iter().any(|entry| entry.value == ip))
+    }
+
+    #[test]
+    #[ignore]
     fn connection_acl_data() {
         let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock".into());
         let connection = builder.connect().unwrap();
@@ -276,12 +306,20 @@ mod tests {
         let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock".into());
         let connection = builder.connect().unwrap();
         let acls = connection.acl_list().unwrap();
-        assert_eq!(acls.len(), 1);
+
+        assert_eq!(acls.len(), 2);
+
         assert_eq!(acls[0].id, 0);
         assert_eq!(acls[0].reference, None);
         assert_eq!(
             acls[0].description,
             "acl 'src' file '/usr/local/etc/haproxy/haproxy.cfg' line 20"
+        );
+        assert_eq!(acls[1].id, 1);
+        assert_eq!(acls[1].reference, None);
+        assert_eq!(
+            acls[1].description,
+            "acl 'src' file '/usr/local/etc/haproxy/haproxy.cfg' line 21"
         );
     }
 

@@ -5,6 +5,21 @@ use crate::errors::Error;
 use crate::models;
 use crate::responses::{Acl, CliSocket};
 
+pub fn parse_acl_add<T: Read>(reader: &mut BufReader<T>) -> Result<(), Error> {
+    let mut buf = String::new();
+    reader.read_line(&mut buf)?;
+
+    if buf == "\n" {
+        Ok(())
+    } else if buf.starts_with("'add acl' expects two parameters") {
+        Err(Error::MissingParameters)
+    } else if buf.starts_with("Unknown ACL identifier") {
+        Err(Error::UnknownId)
+    } else {
+        Err(Error::ParseFailure)
+    }
+}
+
 pub fn parse_acl_list<T: Read>(reader: &mut BufReader<T>) -> Result<Vec<Acl>, Error> {
     skip_comment_or_empty_lines(reader.lines())
         .map(|line_res| {
@@ -73,6 +88,12 @@ fn skip_comment_or_empty_lines<B: io::BufRead>(
 mod tests {
     use super::*;
     use crate::responses;
+
+    #[test]
+    fn parse_acl_add_success_response() {
+        let mut buffer = BufReader::new(&b"\n"[..]);
+        assert!(parse_acl_add(&mut buffer).is_ok());
+    }
 
     #[test]
     fn parse_acl_list_valid_input() {

@@ -8,6 +8,9 @@ pub enum Error {
     /// HAProxy was not able to find an item by the ID provided.
     UnknownId,
 
+    /// Command did not have enough parameters.
+    MissingParameters,
+
     /// Error encountered while performing IO.
     IoError(std::io::Error),
 }

@@ -7,6 +7,10 @@ pub fn end<W: Write>(w: &mut W) -> Result<()> {
     w.write_all(b"\n")
 }
 
+pub fn add_acl<W: Write>(w: &mut W, id: AclId, entry: &str) -> Result<()> {
+    w.write_fmt(format_args!("add acl {} {}", id, entry))
+}
+
 pub fn show_acl<W: Write>(w: &mut W) -> Result<()> {
     w.write_all(b"show acl")
 }
