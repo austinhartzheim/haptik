@@ -1,6 +1,6 @@
-use haptik::{ConnectionBuilder, UnixSocketBuilder};
 use haptik::requests::{AclId, BackendId, ErrorFlag};
 use haptik::responses;
+use haptik::{ConnectionBuilder, UnixSocketBuilder};
 
 #[test]
 #[ignore]

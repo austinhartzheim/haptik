@@ -107,6 +107,10 @@ mod tests {
 
         let mut buffer = BufReader::new(&b"'abcd' is not a valid IPv4 or IPv6 address.\n"[..]);
         assert!(parse_acl_add(&mut buffer).is_err());
+
+        let mut buffer =
+            BufReader::new(&b"Unknown ACL identifier. Please use #<id> or <file>.\n"[..]);
+        assert!(parse_acl_add(&mut buffer).is_err());
     }
 
     #[test]
