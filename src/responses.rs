@@ -16,26 +16,24 @@ impl FromStr for Acl {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let parts: Vec<&str> = s.splitn(3, ' ').collect();
-        match parts.as_slice() {
-            [id, reference, description] => {
-                let reference_option = match reference {
-                    &"()" => None,
-                    reference => {
-                        if reference.len() < 3 {
-                            return Err(Error::ParseFailure);
-                        }
-
-                        Some(reference[1..reference.len() - 1].into())
+        if let [id, reference, description] = parts.as_slice() {
+            let reference_option = match reference {
+                &"()" => None,
+                reference => {
+                    if reference.len() < 3 {
+                        return Err(Error::ParseFailure);
                     }
-                };
+                    Some(reference[1..reference.len() - 1].into())
+                }
+            };
 
-                Ok(Acl {
-                    id: i32::from_str(id)?,
-                    reference: reference_option,
-                    description: description.to_string(),
-                })
-            }
-            _ => Err(Error::ParseFailure),
+            Ok(Acl {
+                id: i32::from_str(id)?,
+                reference: reference_option,
+                description: description.to_string(),
+            })
+        } else {
+            Err(Error::ParseFailure)
         }
     }
 }
