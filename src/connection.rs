@@ -178,6 +178,22 @@ impl<T: Read + Write> Connection<T> {
         parsers::parse_acl_entries(&mut self.reader)
     }
 
+    /// Query HAProxy for available ACLs.
+    ///
+    /// HAProxy responses to this query with a list of configured ACLs, including the IDs of the
+    /// ACLs which can be used to read or modify the ACL.
+    ///
+    /// # Examples
+    /// ```no_run
+    /// use haptik::{ConnectionBuilder, UnixSocketBuilder};
+    ///
+    /// let socket_builder = UnixSocketBuilder::default();
+    /// let connection = socket_builder.connect().expect("Failed to connect");
+    /// let acls = connection.acl_list().expect("Failed to query ACLs");
+    /// for acl in acls {
+    ///     println!("ACL: id={}, description={}", acl.id, acl.description);
+    /// }
+    /// ```
     pub fn acl_list(mut self) -> Result<Vec<Acl>, Error> {
         commands::show_acl(&mut self.socket)?;
         commands::end(&mut self.socket)?;
