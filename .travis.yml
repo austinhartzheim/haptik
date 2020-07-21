@@ -2,7 +2,7 @@ language: rust
 services:
   - docker
 before_install:
-  docker run -d -v $(pwd)/examples/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg -v /tmp/socket:/var/run --entrypoint haproxy haproxy:latest -db -f /usr/local/etc/haproxy/haproxy.cfg
+  docker run -d -v $(pwd)/examples/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg -v /tmp/socket:/var/run --entrypoint haproxy -p 9999:9999 haproxy:latest -db -f /usr/local/etc/haproxy/haproxy.cfg
 addons:
   apt:
     packages:
