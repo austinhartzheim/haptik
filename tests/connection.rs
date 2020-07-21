@@ -1,6 +1,8 @@
+use std::net::{Ipv4Addr, SocketAddrV4};
+
 use haptik::requests::{AclId, BackendId, ErrorFlag};
 use haptik::responses;
-use haptik::{ConnectionBuilder, UnixSocketBuilder};
+use haptik::{ConnectionBuilder, TcpSocketBuilder, UnixSocketBuilder};
 
 #[test]
 #[ignore]
@@ -9,6 +11,17 @@ fn unix_socket_builder_connects() {
     assert!(
         builder.connect().is_ok(),
         "Failed to connect to the HAProxy Unix socket"
+    );
+}
+
+#[test]
+#[ignore]
+fn tcp_socket_builder_connects() {
+    let builder =
+        TcpSocketBuilder::new(SocketAddrV4::new(Ipv4Addr::new(127, 0, 0, 1), 9999).into());
+    assert!(
+        builder.connect().is_ok(),
+        "Failed to connect to the HAProxy TCP socket"
     );
 }
 
