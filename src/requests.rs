@@ -2,19 +2,6 @@
 
 use std::fmt::{self, Display};
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum AclId {
-    Id(i32),
-}
-
-impl Display for AclId {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            AclId::Id(id) => f.write_fmt(format_args!("#{}", id)),
-        }
-    }
-}
-
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum BackendId<'a> {
     /// Match all backends.

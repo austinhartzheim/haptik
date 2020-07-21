@@ -1,6 +1,7 @@
 //! Format commands.
 
-use crate::requests::{AclId, BackendId, ErrorFlag};
+use crate::models::AclId;
+use crate::requests::{BackendId, ErrorFlag};
 use std::io::{Result, Write};
 
 pub fn end<W: Write>(w: &mut W) -> Result<()> {

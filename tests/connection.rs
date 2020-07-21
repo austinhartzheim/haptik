@@ -1,6 +1,7 @@
 use std::net::{Ipv4Addr, SocketAddrV4};
 
-use haptik::requests::{AclId, BackendId, ErrorFlag};
+use haptik::models::AclId;
+use haptik::requests::{BackendId, ErrorFlag};
 use haptik::responses;
 use haptik::{ConnectionBuilder, TcpSocketBuilder, UnixSocketBuilder};
 

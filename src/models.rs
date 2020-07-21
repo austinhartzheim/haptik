@@ -1,4 +1,5 @@
 use crate::errors::Error;
+use std::fmt::{self, Display};
 use std::str::FromStr;
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
@@ -26,6 +27,19 @@ impl<T: FromStr> FromStr for AclEntry<T> {
             }
         } else {
             Err(Error::ParseFailure)
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum AclId {
+    Id(i32),
+}
+
+impl Display for AclId {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            AclId::Id(id) => f.write_fmt(format_args!("#{}", id)),
         }
     }
 }

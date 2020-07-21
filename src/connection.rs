@@ -8,7 +8,7 @@ use crate::commands;
 use crate::errors::Error;
 use crate::models;
 use crate::parsers;
-use crate::requests::{AclId, BackendId, ErrorFlag};
+use crate::requests::{BackendId, ErrorFlag};
 use crate::responses::{self, Acl};
 
 /// Support connections to HAProxy via Unix sockets and TCP sockets using the same interface.
@@ -134,13 +134,13 @@ impl<T: Read + Write> Connection<T> {
     /// ```no_run
     /// use std::net::Ipv4Addr;
     /// use haptik::{ConnectionBuilder, UnixSocketBuilder};
-    /// use haptik::requests::AclId;
+    /// use haptik::models::AclId;
     ///
     /// let socket_builder = UnixSocketBuilder::default();
     /// let connection = socket_builder.connect().expect("Failed to connect");
     /// connection.acl_add(AclId::Id(0), Ipv4Addr::new(127, 0, 0, 1));
     /// ```
-    pub fn acl_add<E: ToString>(mut self, id: AclId, value: E) -> Result<(), Error> {
+    pub fn acl_add<E: ToString>(mut self, id: models::AclId, value: E) -> Result<(), Error> {
         let string = value.to_string();
         let parts: Vec<&str> = string.splitn(2, ' ').collect();
 
@@ -162,7 +162,7 @@ impl<T: Read + Write> Connection<T> {
     /// ```no_run
     /// use std::net::IpAddr;
     /// use haptik::{ConnectionBuilder, UnixSocketBuilder};
-    /// use haptik::requests::AclId;
+    /// use haptik::models::AclId;
     ///
     /// let socket_builder = UnixSocketBuilder::default();
     /// let connection = socket_builder.connect().expect("Failed to connect");
@@ -171,7 +171,10 @@ impl<T: Read + Write> Connection<T> {
     ///     println!("ACL Entry: id={}, value={}", acl_entry.id, acl_entry.value);
     /// }
     /// ```
-    pub fn acl_data<E: FromStr>(mut self, id: AclId) -> Result<Vec<models::AclEntry<E>>, Error> {
+    pub fn acl_data<E: FromStr>(
+        mut self,
+        id: models::AclId,
+    ) -> Result<Vec<models::AclEntry<E>>, Error> {
         commands::show_acl_entries(&mut self.socket, id)?;
         commands::end(&mut self.socket)?;
 
