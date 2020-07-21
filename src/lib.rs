@@ -10,4 +10,4 @@ mod parsers;
 pub mod requests;
 pub mod responses;
 
-pub use connection::{Connection, ConnectionBuilder, UnixSocketBuilder};
+pub use connection::{Connection, ConnectionBuilder, TcpSocketBuilder, UnixSocketBuilder};

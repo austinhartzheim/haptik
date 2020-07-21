@@ -1,4 +1,5 @@
 use std::io::{self, BufRead, BufReader, Read, Write};
+use std::net;
 use std::os::unix::net::UnixStream;
 use std::path::PathBuf;
 use std::str::FromStr;
@@ -65,6 +66,50 @@ impl ConnectionBuilder for UnixSocketBuilder {
 impl From<PathBuf> for UnixSocketBuilder {
     fn from(path: PathBuf) -> Self {
         Self { path }
+    }
+}
+
+/// Configuration for connecting to HAProxy TCP socket.
+///
+/// # Examples
+/// ```no_run
+/// use haptik::{ConnectionBuilder, TcpSocketBuilder};
+///
+/// let socket_builder = TcpSocketBuilder::new("127.0.0.1:9999".parse().unwrap());
+/// let connection = socket_builder.connect().expect("Failed to connect");
+/// ```
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct TcpSocketBuilder {
+    /// The address of the TCP socket.
+    addr: net::SocketAddr,
+}
+
+impl TcpSocketBuilder {
+    pub fn new(addr: net::SocketAddr) -> Self {
+        Self { addr }
+    }
+}
+
+/// Use a default location of `127.0.0.1:9999` for the TCP connection.
+impl Default for TcpSocketBuilder {
+    fn default() -> Self {
+        Self {
+            addr: net::SocketAddr::V4(net::SocketAddrV4::new(
+                net::Ipv4Addr::new(127, 0, 0, 1),
+                9999,
+            )),
+        }
+    }
+}
+
+impl ConnectionBuilder for TcpSocketBuilder {
+    type Connection = Connection<net::TcpStream>;
+
+    fn connect(&self) -> Result<Self::Connection, io::Error> {
+        let socket = net::TcpStream::connect(&self.addr)?;
+        let reader = BufReader::new(socket.try_clone()?);
+
+        Ok(Connection { socket, reader })
     }
 }
 
