@@ -26,7 +26,7 @@ println!("Sockets: {:?}", connection.cli_sockets());
 ## Developing
 1. Start HAProxy via Docker by running this command at the base directory for this project:
 ```sh
-docker run -d -v $(pwd)/examples/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg -v /tmp/socket:/var/run --entrypoint haproxy haproxy:latest -db -f /usr/local/etc/haproxy/haproxy.cfg
+docker run -d -v $(pwd)/examples/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg -v /tmp/socket:/var/run --entrypoint haproxy -p 9999:9999 haproxy:latest -db -f /usr/local/etc/haproxy/haproxy.cfg
 ```
 2. Run the test suite. The ignored tests require a running HAProxy instance (configured in step 1).
 ```sh
