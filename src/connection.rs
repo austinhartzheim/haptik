@@ -1,7 +1,7 @@
 use std::io::{self, BufRead, BufReader, Read, Write};
 use std::net;
 use std::os::unix::net::UnixStream;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
 use crate::commands;
@@ -35,11 +35,13 @@ impl UnixSocketBuilder {
     /// ```no_run
     /// use haptik::{ConnectionBuilder, UnixSocketBuilder};
     ///
-    /// let socket_builder = UnixSocketBuilder::new("/var/run/haproxy.sock".into());
+    /// let socket_builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock");
     /// let connection = socket_builder.connect().expect("Failed to connect");
     /// ```
-    pub fn new(path: PathBuf) -> Self {
-        Self { path }
+    pub fn new<P: AsRef<Path>>(path: P) -> Self {
+        Self {
+            path: path.as_ref().to_path_buf(),
+        }
     }
 }
 
@@ -301,7 +303,7 @@ mod tests {
 
     #[test]
     fn unix_socket_builder_errors_on_invalid_socket() {
-        let builder = UnixSocketBuilder::new("/tmp/invalid.sock".into());
+        let builder = UnixSocketBuilder::new("/tmp/invalid.sock");
         assert_eq!(
             builder
                 .connect()

@@ -8,7 +8,7 @@ use haptik::{ConnectionBuilder, TcpSocketBuilder, UnixSocketBuilder};
 #[test]
 #[ignore]
 fn unix_socket_builder_connects() {
-    let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock".into());
+    let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock");
     assert!(
         builder.connect().is_ok(),
         "Failed to connect to the HAProxy Unix socket"
@@ -32,7 +32,7 @@ fn connection_acl_add() {
     let ip = std::net::Ipv4Addr::new(255, 255, 255, 255);
     let acl_id = AclId::Id(1);
 
-    let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock".into());
+    let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock");
     let connection = builder.connect().unwrap();
     connection.acl_add(acl_id, &ip).unwrap();
 
@@ -45,7 +45,7 @@ fn connection_acl_add() {
 #[test]
 #[ignore]
 fn connection_acl_data() {
-    let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock".into());
+    let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock");
     let connection = builder.connect().unwrap();
     let acl_data = connection
         .acl_data::<std::net::IpAddr>(AclId::Id(0))
@@ -64,7 +64,7 @@ fn connection_acl_data() {
 #[test]
 #[ignore]
 fn connection_acl_data_str() {
-    let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock".into());
+    let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock");
     let connection = builder.connect().unwrap();
     let acl_data = connection.acl_data::<String>(AclId::Id(0)).unwrap();
     assert_eq!(acl_data.len(), 2);
@@ -75,7 +75,7 @@ fn connection_acl_data_str() {
 #[test]
 #[ignore]
 fn connection_acl_list() {
-    let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock".into());
+    let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock");
     let connection = builder.connect().unwrap();
     let acls = connection.acl_list().unwrap();
 
@@ -98,7 +98,7 @@ fn connection_acl_list() {
 #[test]
 #[ignore]
 fn connection_cli_sockets() {
-    let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock".into());
+    let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock");
     let connection = builder.connect().unwrap();
     let sockets = connection.cli_sockets().unwrap();
 
@@ -132,7 +132,7 @@ fn connection_cli_sockets() {
 #[test]
 #[ignore]
 fn connection_level() {
-    let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock".into());
+    let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock");
     let connection = builder.connect().unwrap();
     assert_eq!(connection.level().unwrap(), responses::Level::Admin);
 }
@@ -140,7 +140,7 @@ fn connection_level() {
 #[test]
 #[ignore]
 fn connection_errors() {
-    let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock".into());
+    let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock");
     let connection = builder.connect().unwrap();
     assert_eq!(connection.errors().unwrap(), 0);
 }
@@ -148,7 +148,7 @@ fn connection_errors() {
 #[test]
 #[ignore]
 fn connection_errors_backend_all() {
-    let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock".into());
+    let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock");
     let connection = builder.connect().unwrap();
     assert_eq!(
         connection
@@ -161,7 +161,7 @@ fn connection_errors_backend_all() {
 #[test]
 #[ignore]
 fn connection_errors_backend_id() {
-    let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock".into());
+    let builder = UnixSocketBuilder::new("/tmp/socket/haproxy.sock");
     let connection = builder.connect().unwrap();
     assert_eq!(
         connection
