@@ -12,3 +12,6 @@ keywords = [
 
 [dependencies]
 
+[badges]
+travis-ci = { repository = "austinhartzheim/haptik" }
+coveralls = { repository = "austinhartzheim/haptik", branch = "master", service = "github" }
